@@ -2,6 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+ENV PYTHONUNBUFFERED=1
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     postgresql-client \
@@ -14,4 +16,5 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["python", "app.py"]
+# Use gunicorn for production; environment should set WORKERS
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "app:app"]
