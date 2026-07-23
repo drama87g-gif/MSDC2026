@@ -1,0 +1,128 @@
+name: Build Installers and Packages
+
+on:
+  push:
+    branches: [ main, feature/msdc-admissions ]
+  workflow_dispatch:
+
+jobs:
+  postgres-packages:
+    name: Package PostgreSQL (.deb) on Ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure apt to allow downloads
+        run: |
+          sudo apt-get update
+
+      - name: Download PostgreSQL packages
+        run: |
+          # Install download tool & fetch package metadata
+          sudo apt-get install --download-only -y postgresql postgresql-contrib postgresql-client || true
+          mkdir -p artifacts/postgres_debs
+          # Copy any debs that apt cached
+          cp -v /var/cache/apt/archives/*.deb artifacts/postgres_debs/ || true
+          ls -lah artifacts/postgres_debs || true
+
+      - name: Create tarball of PostgreSQL packages
+        run: |
+          if [ -d artifacts/postgres_debs ] && [ "$(ls -A artifacts/postgres_debs)" ]; then
+            tar -czf postgres-packages.tar.gz -C artifacts postgres_debs
+            ls -lah postgres-packages.tar.gz
+          else
+            echo "No debs were downloaded; creating empty marker file"
+            touch postgres-packages.tar.gz
+          fi
+
+      - name: Upload PostgreSQL artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: postgres-packages
+          path: postgres-packages.tar.gz
+
+  windows-flutter:
+    name: Build Flutter Windows app and package SDK (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter (stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Flutter --version
+        run: flutter --version
+
+      - name: Find Flutter project and build Windows
+        shell: pwsh
+        run: |
+          $pubspec = Get-ChildItem -Path . -Filter pubspec.yaml -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($null -eq $pubspec) {
+            Write-Host "No Flutter project (pubspec.yaml) found in the repository. Skipping app build.";
+            exit 0
+          }
+          $projDir = Split-Path $pubspec.FullName -Parent
+          Write-Host "Found Flutter project at: $projDir"
+          Push-Location $projDir
+          flutter pub get
+          # Build Windows release; may fail if Windows toolchain not configured, or if dependencies need extra setup
+          flutter build windows --release
+          Pop-Location
+
+      - name: Package Flutter Windows build (if exists)
+        shell: pwsh
+        run: |
+          $pubspec = Get-ChildItem -Path . -Filter pubspec.yaml -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($null -eq $pubspec) {
+            Write-Host "No build to package.";
+            exit 0
+          }
+          $projDir = Split-Path $pubspec.FullName -Parent
+          $buildDir = Join-Path $projDir "build\windows\runner\Release"
+          if (Test-Path $buildDir) {
+            $zip = "flutter-windows-build.zip"
+            if (Test-Path $zip) { Remove-Item $zip -Force }
+            Compress-Archive -Path (Join-Path $buildDir "*") -DestinationPath $zip
+            Write-Host "Created $zip"
+          } else {
+            Write-Host "Build output not found at $buildDir; nothing to package."
+          }
+
+      - name: Upload Flutter Windows build artifact (if produced)
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-windows-build
+          path: flutter-windows-build.zip
+          if-no-files-found: ignore
+
+      - name: Package Flutter SDK (zip)
+        shell: pwsh
+        run: |
+          # Attempt to locate FLUTTER_ROOT or common install locations
+          $flutterRoot = $env:FLUTTER_ROOT
+          if (-not $flutterRoot) {
+            $possible = @("C:\hostedtoolcache\windows\flutter", "C:\tools\flutter", "C:\flutter")
+            foreach ($p in $possible) {
+              if (Test-Path $p) { $flutterRoot = $p; break }
+            }
+          }
+          if (-not $flutterRoot) {
+            Write-Host "Flutter SDK root not found; skipping SDK package.";
+            exit 0
+          }
+          Write-Host "Packaging Flutter SDK from: $flutterRoot"
+          $sdkZip = "flutter-sdk.zip"
+          if (Test-Path $sdkZip) { Remove-Item $sdkZip -Force }
+          Compress-Archive -Path (Join-Path $flutterRoot "*") -DestinationPath $sdkZip
+
+      - name: Upload Flutter SDK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-sdk
+          path: flutter-sdk.zip
+          if-no-files-found: ignore
