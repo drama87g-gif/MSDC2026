@@ -1,0 +1,170 @@
+name: Build Windows Installer (.exe) + optional PostgreSQL bundle
+
+on:
+  push:
+    branches: [ main, feature/msdc-admissions ]
+  workflow_dispatch:
+
+jobs:
+  build-windows-installer:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    env:
+      APP_NAME: MSDCApp           # change to your app name if you like
+      OUT_ARTIFACT_PREFIX: msdc-windows
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Flutter (stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Show Flutter version
+        run: flutter --version
+
+      - name: Find Flutter project (pubspec.yaml)
+        id: find
+        shell: pwsh
+        run: |
+          $pubspec = Get-ChildItem -Path . -Filter pubspec.yaml -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($null -eq $pubspec) {
+            Write-Host "No Flutter project (pubspec.yaml) found. Skipping job."
+            exit 0
+          }
+          $projDir = Split-Path $pubspec.FullName -Parent
+          Write-Host "Found Flutter project at: $projDir"
+          $pub = Get-Content $pubspec.FullName -Raw
+          if ($pub -match 'version:\s*([0-9A-Za-z\.\-\+]+)') { $version = $matches[1] } else { $version = '0.0.0' }
+          Write-Host ("projDir="+$projDir) 
+          Write-Host ("version="+$version)
+          echo "::set-output name=projDir::$projDir"
+          echo "::set-output name=version::$version"
+
+      - name: Flutter pub get and build windows
+        if: steps.find.outputs.projDir != ''
+        shell: pwsh
+        run: |
+          $projDir = "${{ steps.find.outputs.projDir }}"
+          Push-Location $projDir
+          flutter pub get
+          flutter build windows --release
+          Pop-Location
+
+      - name: Install NSIS (makensis)
+        shell: pwsh
+        run: |
+          choco install nsis -y
+          refreshenv
+
+      - name: Create NSIS installer script and build installer
+        if: steps.find.outputs.projDir != ''
+        shell: pwsh
+        run: |
+          $projDir = "${{ steps.find.outputs.projDir }}"
+          $version = "${{ steps.find.outputs.version }}".Replace(' ', '_')
+          $appName = "${{ env.APP_NAME }}"
+          $workDir = Join-Path $env:RUNNER_TEMP "nsis_installer"
+          Remove-Item $workDir -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path $workDir | Out-Null
+
+          $buildDir = Join-Path $projDir "build\\windows\\runner\\Release"
+          if (-not (Test-Path $buildDir)) { Write-Host "Build output not found at $buildDir"; exit 1 }
+
+          # find exe name in build dir
+          $exeName = (Get-ChildItem -Path $buildDir -Filter *.exe | Select-Object -First 1).Name
+          if (-not $exeName) { Write-Host "No exe found in build folder"; exit 1 }
+
+          $nsi = Join-Path $workDir "installer.nsi"
+          $outExe = "${{ env.OUT_ARTIFACT_PREFIX }}-$version.exe"
+          $buildDirEsc = $buildDir -replace '\\','\\\\'
+
+          $nsiContent = @"
+Name "$appName"
+OutFile "$outExe"
+InstallDir "$PROGRAMFILES\\$appName"
+SetCompress auto
+SetCompressor /SOLID lzma
+Page directory
+Page instfiles
+
+Section "MainSection"
+  SetOutPath "$INSTDIR"
+  File /r "$buildDirEsc\\*"
+  CreateShortCut "$DESKTOP\\$appName.lnk" "$INSTDIR\\$exeName"
+  WriteUninstaller "$INSTDIR\\Uninstall.exe"
+SectionEnd
+
+Section "Uninstall"
+  Delete "$DESKTOP\\$appName.lnk"
+  RMDir /r "$INSTDIR"
+SectionEnd
+"@
+          $nsiContent | Out-File -FilePath $nsi -Encoding UTF8
+
+          # Run makensis in the working dir
+          Push-Location $workDir
+          & makensis $nsi
+          if ($LASTEXITCODE -ne 0) { throw "makensis failed with exit code $LASTEXITCODE" }
+          Pop-Location
+
+          # Move produced exe to workspace root for uploading
+          $exeOutPath = Join-Path (Get-Location) $outExe
+          if (-not (Test-Path $exeOutPath)) {
+            # makensis outputs in current dir; search for the exe
+            $found = Get-ChildItem -Path $workDir -Filter *.exe -Recurse | Select-Object -First 1
+            if ($found) { Copy-Item $found.FullName -Destination $exeOutPath -Force }
+            else { throw "Installer EXE not found" }
+          }
+          Write-Host "Installer produced: $exeOutPath"
+          echo "::set-output name=installer::$exeOutPath"
+
+      - name: Optional code signing (PFX)
+        if: ${{ secrets.SIGNING_CERT_BASE64 != '' }}
+        shell: pwsh
+        env:
+          SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: |
+          $version = "${{ steps.find.outputs.version }}".Replace(' ', '_')
+          $installer = "${{ env.OUT_ARTIFACT_PREFIX }}-$version.exe"
+          if (-not (Test-Path $installer)) { Write-Host "Installer not found, skipping signing"; exit 0 }
+          $pfxPath = Join-Path $env:TEMP "codesign.pfx"
+          [System.Convert]::FromBase64String($env:SIGNING_CERT_BASE64) | Set-Content -Path $pfxPath -AsByteStream
+          # Sign using signtool (Windows SDK). Adjust path if necessary.
+          $signtool = "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\x64\\signtool.exe"
+          if (-not (Test-Path $signtool)) {
+            $signtool = (Get-Command signtool -ErrorAction SilentlyContinue).Source
+          }
+          if (-not $signtool) { Write-Host "signtool not found; skipping signing"; exit 0 }
+          & $signtool sign /f $pfxPath /p $env:SIGNING_CERT_PASSWORD /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $installer
+          if ($LASTEXITCODE -ne 0) { throw "signtool failed" }
+          Write-Host "Signed $installer"
+
+      - name: Optionally download PostgreSQL installer (if POSTGRES_INSTALLER_URL provided)
+        if: ${{ env.POSTGRES_INSTALLER_URL != '' }}
+        shell: pwsh
+        run: |
+          $url = "${{ env.POSTGRES_INSTALLER_URL }}"
+          if (-not $url) { Write-Host "POSTGRES_INSTALLER_URL not set; skipping"; exit 0 }
+          $out = "postgres-installer.exe"
+          Write-Host "Downloading PostgreSQL installer from $url"
+          Invoke-WebRequest -Uri $url -OutFile $out
+          if (-not (Test-Path $out)) { throw "Failed to download PostgreSQL installer" }
+          Write-Host "Downloaded $out (size $(Get-Item $out).Length bytes)"
+      - name: Upload app installer artifact
+        if: steps.find.outputs.projDir != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: ${{ env.OUT_ARTIFACT_PREFIX }}-${{ steps.find.outputs.version }}.exe
+      - name: Upload postgres installer artifact (if downloaded)
+        if: ${{ env.POSTGRES_INSTALLER_URL != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: postgres-installer
+          path: postgres-installer.exe
+          if-no-files-found: ignore
