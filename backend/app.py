@@ -1,12 +1,16 @@
 import os
 import csv
 import io
-from datetime import datetime
-from flask import Flask, jsonify, request, send_from_directory, send_file
+from datetime import datetime, timedelta
+from flask import Flask, jsonify, request, send_from_directory, send_file, render_template_string
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import joinedload
+from flask_migrate import Migrate
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import openpyxl
 
 # Configuration
 app = Flask(__name__)
@@ -14,16 +18,34 @@ app = Flask(__name__)
 # Read database URL from env (default to sqlite for dev)
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:////app/msdc.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max photo
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret')
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', app.config['SECRET_KEY'])
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=int(os.environ.get('JWT_EXP_DAYS', '1')))
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 CORS(app)
+jwt = JWTManager(app)
 
 # Models
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(128), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(256), nullable=False)
+    role = db.Column(db.String(64), default='admin')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+
 class Patient(db.Model):
     __tablename__ = 'patients'
     __table_args__ = (
@@ -166,6 +188,21 @@ def paginate_query(query, schema_func=None):
     }
 
 
+# Authentication endpoints
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.get_json() or {}
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return jsonify({'msg': 'username and password required'}), 400
+    user = User.query.filter_by(username=username).first()
+    if not user or not user.check_password(password):
+        return jsonify({'msg': 'Bad username or password'}), 401
+    access_token = create_access_token(identity={'id': user.id, 'username': user.username, 'role': user.role})
+    return jsonify({'access_token': access_token}), 200
+
+
 # API Routes
 @app.route('/api/health', methods=['GET'])
 def health():
@@ -282,7 +319,34 @@ def uploaded_file(filename):
 @app.route('/api/patients/export', methods=['GET'])
 def export_patients():
     # Optionally accept date range
+    fmt = request.args.get('format', 'csv')
     patients_q = Patient.query.order_by(Patient.id)
+
+    if fmt == 'xlsx':
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        headers = ['id', 'file_number', 'barcode', 'first_name', 'last_name', 'national_id', 'nationality', 'date_of_birth', 'phone', 'address', 'medical_history', 'allergies']
+        ws.append(headers)
+        for p in patients_q:
+            ws.append([
+                p.id,
+                p.file_number,
+                p.barcode,
+                p.first_name,
+                p.last_name,
+                p.national_id,
+                p.nationality,
+                p.date_of_birth.isoformat() if p.date_of_birth else '',
+                p.phone,
+                p.address,
+                p.medical_history,
+                p.allergies
+            ])
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='patients_export.xlsx')
+
     si = io.StringIO()
     cw = csv.writer(si)
     headers = ['id', 'file_number', 'barcode', 'first_name', 'last_name', 'national_id', 'nationality', 'date_of_birth', 'phone', 'address', 'medical_history', 'allergies']
@@ -308,15 +372,49 @@ def export_patients():
     return send_file(output, mimetype='text/csv', as_attachment=True, download_name='patients_export.csv')
 
 
-# Import patients from CSV (simple)
+# Import patients from CSV/XLSX
 @app.route('/api/patients/import', methods=['POST'])
 def import_patients():
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
     file = request.files['file']
+    filename = file.filename.lower()
+    created = 0
+
+    if filename.endswith('.xlsx') or filename.endswith('.xls'):
+        wb = openpyxl.load_workbook(file)
+        ws = wb.active
+        rows = list(ws.iter_rows(values_only=True))
+        headers = [h for h in rows[0]]
+        for row in rows[1:]:
+            rowd = dict(zip(headers, row))
+            dob = None
+            if rowd.get('date_of_birth'):
+                try:
+                    dob = datetime.fromisoformat(str(rowd.get('date_of_birth'))).date()
+                except Exception:
+                    dob = None
+            patient = Patient(
+                file_number=str(rowd.get('file_number') or ''),
+                barcode=str(rowd.get('barcode') or ''),
+                first_name=str(rowd.get('first_name') or ''),
+                last_name=str(rowd.get('last_name') or ''),
+                national_id=str(rowd.get('national_id') or None),
+                nationality=str(rowd.get('nationality') or None),
+                date_of_birth=dob,
+                phone=str(rowd.get('phone') or None),
+                address=str(rowd.get('address') or None),
+                medical_history=str(rowd.get('medical_history') or None),
+                allergies=str(rowd.get('allergies') or None)
+            )
+            db.session.add(patient)
+            created += 1
+        db.session.commit()
+        return jsonify({'created': created}), 201
+
+    # else assume CSV
     stream = io.StringIO(file.stream.read().decode('utf-8'))
     reader = csv.DictReader(stream)
-    created = 0
     for row in reader:
         dob = None
         if row.get('date_of_birth'):
@@ -341,6 +439,46 @@ def import_patients():
         created += 1
     db.session.commit()
     return jsonify({'created': created}), 201
+
+
+# Printable patient card (HTML)
+CARD_TEMPLATE = """
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Patient Card</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .card { width: 350px; height: 200px; border: 1px solid #333; padding: 10px; }
+    .photo { float: right; width: 90px; height: 90px; object-fit: cover; border: 1px solid #ccc; }
+    .row { margin-bottom: 6px; }
+    .label { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    {% if photo_url %}
+      <img src="{{ photo_url }}" class="photo" />
+    {% endif %}
+    <div class="row"><span class="label">Name:</span> {{ first_name }} {{ last_name }}</div>
+    <div class="row"><span class="label">National ID:</span> {{ national_id }}</div>
+    <div class="row"><span class="label">File #:</span> {{ file_number }}</div>
+    <div class="row"><span class="label">Nationality:</span> {{ nationality }}</div>
+    <div class="row"><span class="label">Phone:</span> {{ phone }}</div>
+    <div class="row"><span class="label">Address:</span> {{ address }}</div>
+    <div class="row"><span class="label">Allergies:</span> {{ allergies }}</div>
+    <div class="row"><span class="label">Barcode:</span> {{ barcode }}</div>
+  </div>
+</body>
+</html>
+"""
+
+
+@app.route('/api/patients/<int:patient_id>/card', methods=['GET'])
+def patient_card(patient_id):
+    patient = Patient.query.get_or_404(patient_id)
+    return render_template_string(CARD_TEMPLATE, **patient.to_dict())
 
 
 # Medications - paginated
@@ -399,11 +537,28 @@ def appointments():
     return jsonify(paginate_query(query, schema_func=lambda a: a.to_dict()))
 
 
+# Admin seed helper
+def seed_admin():
+    admin_username = os.environ.get('SEED_ADMIN_USER', 'admin')
+    admin_password = os.environ.get('SEED_ADMIN_PASS', 'AdminPass123')
+    if User.query.filter_by(username=admin_username).first():
+        return
+    pw_hash = generate_password_hash(admin_password)
+    user = User(username=admin_username, password_hash=pw_hash, role='admin')
+    db.session.add(user)
+    db.session.commit()
+    print('Seeded admin user:', admin_username)
+
+
 # Serve app
 if __name__ == '__main__':
-    # If INIT_DB environment var is set to "1", create tables at startup (dev only)
+    # If INIT_DB environment var is set to "1", create tables at startup (dev only) and seed admin
     if os.environ.get('INIT_DB') == '1':
         with app.app_context():
             db.create_all()
+            try:
+                seed_admin()
+            except Exception:
+                pass
     # Use gunicorn in production via Docker CMD; here fallback to Flask dev server for local dev
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=os.environ.get('FLASK_DEBUG', '0') == '1')
