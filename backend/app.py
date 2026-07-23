@@ -1,6 +1,7 @@
 import os
 import csv
 import io
+import functools
 from datetime import datetime, timedelta
 from flask import Flask, jsonify, request, send_from_directory, send_file, render_template_string
 from flask_sqlalchemy import SQLAlchemy
@@ -44,6 +45,18 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+
+class AuditLog(db.Model):
+    __tablename__ = 'audit_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=True)
+    username = db.Column(db.String(128), nullable=True)
+    action = db.Column(db.String(128), nullable=False)
+    model = db.Column(db.String(128), nullable=True)
+    object_id = db.Column(db.String(128), nullable=True)
+    details = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class Patient(db.Model):
@@ -188,6 +201,37 @@ def paginate_query(query, schema_func=None):
     }
 
 
+# Simple audit logging helper
+def log_action(user_identity, action, model=None, object_id=None, details=None):
+    try:
+        user_id = None
+        username = None
+        if user_identity:
+            user_id = user_identity.get('id') if isinstance(user_identity, dict) else None
+            username = user_identity.get('username') if isinstance(user_identity, dict) else None
+        entry = AuditLog(user_id=user_id, username=username, action=action, model=model, object_id=str(object_id) if object_id else None, details=details)
+        db.session.add(entry)
+        db.session.commit()
+    except Exception:
+        # don't block main flow on audit errors
+        db.session.rollback()
+
+
+# Role check decorator
+def role_required(*allowed_roles):
+    def decorator(fn):
+        @functools.wraps(fn)
+        @jwt_required()
+        def wrapper(*args, **kwargs):
+            identity = get_jwt_identity()
+            role = identity.get('role') if isinstance(identity, dict) else None
+            if role not in allowed_roles and 'admin' not in allowed_roles and role != 'admin' and 'admin' not in allowed_roles:
+                return jsonify({'msg': 'forbidden'}), 403
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
 # Authentication endpoints
 @app.route('/api/auth/login', methods=['POST'])
 def login():
@@ -218,46 +262,59 @@ def health():
 @app.route('/api/patients', methods=['GET', 'POST'])
 def patients():
     if request.method == 'POST':
-        data = request.get_json() or {}
-        # Parse date_of_birth if provided
-        dob = None
-        if data.get('date_of_birth'):
-            try:
-                dob = datetime.fromisoformat(data.get('date_of_birth')).date()
-            except Exception:
-                dob = None
-        patient = Patient(
-            file_number=data.get('file_number') or '',
-            barcode=data.get('barcode') or '',
-            first_name=data.get('first_name') or '',
-            last_name=data.get('last_name') or '',
-            national_id=data.get('national_id'),
-            nationality=data.get('nationality'),
-            date_of_birth=dob,
-            gender=data.get('gender'),
-            address=data.get('address'),
-            phone=data.get('phone'),
-            email=data.get('email'),
-            medical_history=data.get('medical_history'),
-            allergies=data.get('allergies')
-        )
-        db.session.add(patient)
-        db.session.commit()
-        return jsonify(patient.to_dict()), 201
+        # protected: only admin or admission
+        return _create_patient()
 
     # GET - paginated summary
     query = Patient.query.order_by(Patient.id.desc())
     return jsonify(paginate_query(query, schema_func=lambda p: p.to_summary()))
 
 
+@role_required('admin', 'admission')
+def _create_patient():
+    data = request.get_json() or {}
+    # Parse date_of_birth if provided
+    dob = None
+    if data.get('date_of_birth'):
+        try:
+            dob = datetime.fromisoformat(data.get('date_of_birth')).date()
+        except Exception:
+            dob = None
+    patient = Patient(
+        file_number=data.get('file_number') or '',
+        barcode=data.get('barcode') or '',
+        first_name=data.get('first_name') or '',
+        last_name=data.get('last_name') or '',
+        national_id=data.get('national_id'),
+        nationality=data.get('nationality'),
+        date_of_birth=dob,
+        gender=data.get('gender'),
+        address=data.get('address'),
+        phone=data.get('phone'),
+        email=data.get('email'),
+        medical_history=data.get('medical_history'),
+        allergies=data.get('allergies')
+    )
+    db.session.add(patient)
+    db.session.commit()
+    # log
+    log_action(get_jwt_identity(), 'create_patient', model='Patient', object_id=patient.id)
+    return jsonify(patient.to_dict()), 201
+
+
 @app.route('/api/patients/<int:patient_id>', methods=['GET', 'PUT', 'DELETE'])
+@jwt_required(optional=True)
 def patient_detail(patient_id):
     patient = Patient.query.get_or_404(patient_id)
 
     if request.method == 'GET':
         return jsonify(patient.to_dict())
 
+    identity = get_jwt_identity()
+    # PUT requires admin or admission
     if request.method == 'PUT':
+        if not identity or identity.get('role') not in ('admin', 'admission'):
+            return jsonify({'msg': 'forbidden'}), 403
         data = request.get_json() or {}
         for key, value in data.items():
             if hasattr(patient, key):
@@ -270,9 +327,13 @@ def patient_detail(patient_id):
                 else:
                     setattr(patient, key, value)
         db.session.commit()
+        log_action(identity, 'update_patient', model='Patient', object_id=patient.id)
         return jsonify(patient.to_dict())
 
+    # DELETE
     if request.method == 'DELETE':
+        if not identity or identity.get('role') not in ('admin',):
+            return jsonify({'msg': 'forbidden'}), 403
         # remove photo file if exists
         if patient.photo_filename:
             try:
@@ -281,6 +342,7 @@ def patient_detail(patient_id):
                 pass
         db.session.delete(patient)
         db.session.commit()
+        log_action(identity, 'delete_patient', model='Patient', object_id=patient.id)
         return '', 204
 
 
@@ -292,6 +354,7 @@ def allowed_file(filename):
 
 
 @app.route('/api/patients/<int:patient_id>/photo', methods=['POST'])
+@role_required('admin', 'admission')
 def upload_patient_photo(patient_id):
     patient = Patient.query.get_or_404(patient_id)
     if 'file' not in request.files:
@@ -306,6 +369,7 @@ def upload_patient_photo(patient_id):
         file.save(filepath)
         patient.photo_filename = filename
         db.session.commit()
+        log_action(get_jwt_identity(), 'upload_photo', model='Patient', object_id=patient.id)
         return jsonify({'photo_url': f"/uploads/{filename}"}), 201
     return jsonify({'error': 'Invalid file type'}), 400
 
@@ -315,10 +379,10 @@ def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
-# Export patients to CSV
+# Export patients to CSV/XLSX
 @app.route('/api/patients/export', methods=['GET'])
+@role_required('admin', 'admission', 'reception')
 def export_patients():
-    # Optionally accept date range
     fmt = request.args.get('format', 'csv')
     patients_q = Patient.query.order_by(Patient.id)
 
@@ -345,6 +409,7 @@ def export_patients():
         output = io.BytesIO()
         wb.save(output)
         output.seek(0)
+        log_action(get_jwt_identity(), 'export_patients', details='format=xlsx')
         return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='patients_export.xlsx')
 
     si = io.StringIO()
@@ -369,11 +434,13 @@ def export_patients():
     output = io.BytesIO()
     output.write(si.getvalue().encode('utf-8'))
     output.seek(0)
+    log_action(get_jwt_identity(), 'export_patients', details='format=csv')
     return send_file(output, mimetype='text/csv', as_attachment=True, download_name='patients_export.csv')
 
 
 # Import patients from CSV/XLSX
 @app.route('/api/patients/import', methods=['POST'])
+@role_required('admin', 'admission')
 def import_patients():
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
@@ -410,6 +477,7 @@ def import_patients():
             db.session.add(patient)
             created += 1
         db.session.commit()
+        log_action(get_jwt_identity(), 'import_patients', details='format=xlsx')
         return jsonify({'created': created}), 201
 
     # else assume CSV
@@ -438,6 +506,7 @@ def import_patients():
         db.session.add(patient)
         created += 1
     db.session.commit()
+    log_action(get_jwt_identity(), 'import_patients', details='format=csv')
     return jsonify({'created': created}), 201
 
 
@@ -485,6 +554,14 @@ def patient_card(patient_id):
 @app.route('/api/medications', methods=['GET', 'POST'])
 def medications():
     if request.method == 'POST':
+        # protected: only admin or pharmacy
+        identity = None
+        try:
+            identity = get_jwt_identity()
+        except Exception:
+            pass
+        if not identity or identity.get('role') not in ('admin', 'pharmacy'):
+            return jsonify({'msg': 'forbidden'}), 403
         data = request.get_json() or {}
         exp_date = None
         if data.get('expiration_date'):
@@ -506,6 +583,7 @@ def medications():
         )
         db.session.add(medication)
         db.session.commit()
+        log_action(identity, 'create_medication', model='Medication', object_id=medication.id)
         return jsonify(medication.to_dict()), 201
 
     query = Medication.query.order_by(Medication.id.desc())
@@ -516,6 +594,14 @@ def medications():
 @app.route('/api/appointments', methods=['GET', 'POST'])
 def appointments():
     if request.method == 'POST':
+        # protected: reception or admin
+        identity = None
+        try:
+            identity = get_jwt_identity()
+        except Exception:
+            pass
+        if not identity or identity.get('role') not in ('admin', 'reception'):
+            return jsonify({'msg': 'forbidden'}), 403
         data = request.get_json() or {}
         sched = None
         if data.get('scheduled_date'):
@@ -531,6 +617,7 @@ def appointments():
         )
         db.session.add(appointment)
         db.session.commit()
+        log_action(identity, 'create_appointment', model='Appointment', object_id=appointment.id)
         return jsonify(appointment.to_dict()), 201
 
     query = Appointment.query.options(joinedload(Appointment.patient)).order_by(Appointment.scheduled_date.desc())
