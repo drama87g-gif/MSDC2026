@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="hospital_patient_view_tree" model="ir.ui.view">
+            <field name="name">hospital.patient.view.tree</field>
+            <field name="model">hospital.patient</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="phone"/>
+                    <field name="gender"/>
+                    <field name="blood_group"/>
+                    <field name="state"/>
+                    <field name="registration_date"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="hospital_patient_view_form" model="ir.ui.view">
+            <field name="name">hospital.patient.view.form</field>
+            <field name="model">hospital.patient</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <field name="state" widget="statusbar" options="{'clickable': True}"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="phone"/>
+                                <field name="email"/>
+                                <field name="date_of_birth"/>
+                                <field name="gender"/>
+                                <field name="blood_group"/>
+                            </group>
+                            <group>
+                                <field name="registration_date"/>
+                                <field name="emergency_contact"/>
+                                <field name="emergency_contact_phone"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Medical Information">
+                                <field name="medical_history" widget="html"/>
+                                <field name="allergies" widget="html"/>
+                            </page>
+                            <page string="Address">
+                                <field name="address" widget="html"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="hospital_patient_view_search" model="ir.ui.view">
+            <field name="name">hospital.patient.view.search</field>
+            <field name="model">hospital.patient</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Patient Name"/>
+                    <field name="phone"/>
+                    <filter name="active_patients" string="Active Patients" domain="[('state', '=', 'active')]"/>
+                    <filter name="discharged" string="Discharged" domain="[('state', '=', 'discharged')]"/>
+                    <separator/>
+                    <group expand="1" string="Group By">
+                        <filter name="group_by_gender" string="Gender" context="{'group_by': 'gender'}"/>
+                        <filter name="group_by_blood" string="Blood Group" context="{'group_by': 'blood_group'}"/>
+                        <filter name="group_by_status" string="Status" context="{'group_by': 'state'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="hospital_patient_action" model="ir.actions.act_window">
+            <field name="name">Patients</field>
+            <field name="res_model">hospital.patient</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first patient record.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

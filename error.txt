@@ -1,0 +1,119 @@
+PS C:\Windows\system32> cd C:\pilot.1
+PS C:\pilot.1> docker compose ps
+time="2026-04-20T10:06:20+13:00" level=warning msg="project has been loaded without an explicit name from a symlink. Using name \"pilot.1\""
+NAME          IMAGE         COMMAND                  SERVICE   CREATED          STATUS          PORTS
+pilot1-db-1   postgres:15   "docker-entrypoint.s…"   db        19 minutes ago   Up 18 minutes   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+PS C:\pilot.1> docker compose logs backend --tail=200
+time="2026-04-20T10:06:56+13:00" level=warning msg="project has been loaded without an explicit name from a symlink. Using name \"pilot.1\""
+backend-1  | System check identified some issues:
+backend-1  |
+backend-1  | WARNINGS:
+backend-1  | users.Role: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+backend-1  |    HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+backend-1  | users.User: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+backend-1  |    HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+backend-1  | Traceback (most recent call last):
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+backend-1  |     self.connect()
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+backend-1  |     return func(*args, **kwargs)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py", line 256, in connect
+backend-1  |     self.connection = self.get_new_connection(conn_params)
+backend-1  |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+backend-1  |     return func(*args, **kwargs)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/postgresql/base.py", line 332, in get_new_connection
+backend-1  |     connection = self.Database.connect(**conn_params)
+backend-1  |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+backend-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  | psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+backend-1  |    Is the server running on that host and accepting TCP/IP connections?
+backend-1  | connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+backend-1  |    Is the server running on that host and accepting TCP/IP connections?
+backend-1  |
+backend-1  |
+backend-1  | The above exception was the direct cause of the following exception:
+backend-1  |
+backend-1  | Traceback (most recent call last):
+backend-1  |   File "/app/manage.py", line 16, in <module>
+backend-1  |     main()
+backend-1  |   File "/app/manage.py", line 13, in main
+backend-1  |     execute_from_command_line(sys.argv)
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/core/management/__init__.py", line 442, in execute_from_command_line
+backend-1  |     utility.execute()
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/core/management/__init__.py", line 436, in execute
+backend-1  |     self.fetch_command(subcommand).run_from_argv(self.argv)
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/core/management/base.py", line 420, in run_from_argv
+backend-1  |     self.execute(*args, **cmd_options)
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/core/management/base.py", line 464, in execute
+backend-1  |     output = self.handle(*args, **options)
+backend-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/core/management/base.py", line 111, in wrapper
+backend-1  |     res = handle_func(*args, **kwargs)
+backend-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/core/management/commands/migrate.py", line 114, in handle
+backend-1  |     executor = MigrationExecutor(connection, self.migration_progress_callback)
+backend-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/migrations/executor.py", line 18, in __init__
+backend-1  |     self.loader = MigrationLoader(self.connection)
+backend-1  |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/migrations/loader.py", line 58, in __init__
+backend-1  |     self.build_graph()
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/migrations/loader.py", line 235, in build_graph
+backend-1  |     self.applied_migrations = recorder.applied_migrations()
+backend-1  |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/migrations/recorder.py", line 89, in applied_migrations
+backend-1  |     if self.has_table():
+backend-1  |        ^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/migrations/recorder.py", line 63, in has_table
+backend-1  |     with self.connection.cursor() as cursor:
+backend-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+backend-1  |     return func(*args, **kwargs)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py", line 320, in cursor
+backend-1  |     return self._cursor()
+backend-1  |            ^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py", line 296, in _cursor
+backend-1  |     self.ensure_connection()
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+backend-1  |     return func(*args, **kwargs)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py", line 278, in ensure_connection
+backend-1  |     with self.wrap_database_errors:
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+backend-1  |     raise dj_exc_value.with_traceback(traceback) from exc_value
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py", line 279, in ensure_connection
+backend-1  |     self.connect()
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+backend-1  |     return func(*args, **kwargs)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py", line 256, in connect
+backend-1  |     self.connection = self.get_new_connection(conn_params)
+backend-1  |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+backend-1  |     return func(*args, **kwargs)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/postgresql/base.py", line 332, in get_new_connection
+backend-1  |     connection = self.Database.connect(**conn_params)
+backend-1  |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+backend-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  | django.db.utils.OperationalError: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+backend-1  |    Is the server running on that host and accepting TCP/IP connections?
+backend-1  | connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+backend-1  |    Is the server running on that host and accepting TCP/IP connections?
+backend-1  |
+PS C:\pilot.1> docker compose logs frontend --tail=200
+time="2026-04-20T10:07:23+13:00" level=warning msg="project has been loaded without an explicit name from a symlink. Using name \"pilot.1\""
+frontend-1  |
+frontend-1  | > msdc-frontend@0.1.0 start
+frontend-1  | > react-scripts start
+frontend-1  |
+frontend-1  | sh: react-scripts: not found
+PS C:\pilot.1>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="hospital_medicine_view_tree" model="ir.ui.view">
+            <field name="name">hospital.medicine.view.tree</field>
+            <field name="model">hospital.medicine</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="code"/>
+                    <field name="name"/>
+                    <field name="generic_name"/>
+                    <field name="strength"/>
+                    <field name="category"/>
+                    <field name="current_stock"/>
+                    <field name="minimum_stock"/>
+                    <field name="selling_price"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="hospital_medicine_view_form" model="ir.ui.view">
+            <field name="name">hospital.medicine.view.form</field>
+            <field name="model">hospital.medicine</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="code"/>
+                                <field name="name"/>
+                                <field name="generic_name"/>
+                                <field name="manufacturer"/>
+                            </group>
+                            <group>
+                                <field name="category"/>
+                                <field name="strength"/>
+                                <field name="unit_of_measure"/>
+                                <field name="discontinued"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group>
+                                <field name="cost_price" widget="monetary"/>
+                                <field name="selling_price" widget="monetary"/>
+                            </group>
+                            <group>
+                                <field name="current_stock"/>
+                                <field name="minimum_stock"/>
+                                <field name="maximum_stock"/>
+                                <field name="expiry_alert_days"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Batches">
+                                <field name="batch_lines" mode="tree">
+                                    <tree>
+                                        <field name="batch_number"/>
+                                        <field name="manufacture_date"/>
+                                        <field name="expiry_date"/>
+                                        <field name="quantity_received"/>
+                                        <field name="quantity_dispensed"/>
+                                        <field name="quantity_available"/>
+                                        <field name="state"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Safety Information">
+                                <field name="side_effects" widget="html"/>
+                                <field name="contraindications" widget="html"/>
+                                <field name="storage_conditions" widget="html"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="hospital_medicine_view_search" model="ir.ui.view">
+            <field name="name">hospital.medicine.view.search</field>
+            <field name="model">hospital.medicine</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Medicine Name"/>
+                    <field name="code"/>
+                    <field name="category"/>
+                    <filter name="low_stock" string="Low Stock" domain="[('current_stock', '&lt;', 'minimum_stock')]"/>
+                    <filter name="active_only" string="Active" domain="[('active', '=', True), ('discontinued', '=', False)]"/>
+                    <separator/>
+                    <group expand="1" string="Group By">
+                        <filter name="group_by_category" string="Category" context="{'group_by': 'category'}"/>
+                        <filter name="group_by_manufacturer" string="Manufacturer" context="{'group_by': 'manufacturer'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="hospital_medicine_action" model="ir.actions.act_window">
+            <field name="name">Medicines</field>
+            <field name="res_model">hospital.medicine</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+    </data>
+</odoo>

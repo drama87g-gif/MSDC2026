@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="hospital_dispensing_view_tree" model="ir.ui.view">
+            <field name="name">hospital.medicine.dispensing.view.tree</field>
+            <field name="model">hospital.medicine.dispensing</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="patient_id"/>
+                    <field name="medicine_id"/>
+                    <field name="quantity_dispensed"/>
+                    <field name="dispensing_date"/>
+                    <field name="pharmacist_id"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="hospital_dispensing_view_form" model="ir.ui.view">
+            <field name="name">hospital.medicine.dispensing.view.form</field>
+            <field name="model">hospital.medicine.dispensing</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <field name="state" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name" readonly="True"/>
+                                <field name="patient_id" readonly="True"/>
+                                <field name="prescription_id" readonly="True"/>
+                            </group>
+                            <group>
+                                <field name="dispensing_date"/>
+                                <field name="dispensing_time"/>
+                                <field name="pharmacist_id" readonly="True"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group>
+                                <field name="medicine_id"/>
+                                <field name="batch_id"/>
+                            </group>
+                            <group>
+                                <field name="quantity_dispensed"/>
+                            </group>
+                        </group>
+                        <field name="notes" widget="html"/>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="hospital_dispensing_view_search" model="ir.ui.view">
+            <field name="name">hospital.medicine.dispensing.view.search</field>
+            <field name="model">hospital.medicine.dispensing</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="patient_id"/>
+                    <field name="medicine_id"/>
+                    <separator/>
+                    <group expand="1" string="Group By">
+                        <filter name="group_by_medicine" string="Medicine" context="{'group_by': 'medicine_id'}"/>
+                        <filter name="group_by_patient" string="Patient" context="{'group_by': 'patient_id'}"/>
+                        <filter name="group_by_date" string="Dispensing Date" context="{'group_by': 'dispensing_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="hospital_dispensing_action" model="ir.actions.act_window">
+            <field name="name">Dispensing Records</field>
+            <field name="res_model">hospital.medicine.dispensing</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+    </data>
+</odoo>

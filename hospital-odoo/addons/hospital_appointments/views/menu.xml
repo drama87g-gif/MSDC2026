@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <menuitem id="hospital_appointments_menu" name="Appointments" parent="hospital_core.hospital_root_menu" sequence="2"/>
+        <menuitem id="hospital_appointment_list_menu" action="hospital_appointments.hospital_appointment_action" parent="hospital_appointments_menu" sequence="1"/>
+    </data>
+</odoo>

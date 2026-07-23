@@ -1,0 +1,286 @@
+C:\PILOT.1>docker compose up --build
+#1 [internal] load local bake definitions
+#1 reading from stdin 909B 0.1s done
+#1 DONE 0.1s
+
+#2 [backend internal] load build definition from Dockerfile
+#2 transferring dockerfile:
+#2 transferring dockerfile: 362B 0.4s done
+#2 ...
+
+#3 [frontend internal] load build definition from Dockerfile
+#3 transferring dockerfile: 178B 0.3s done
+#3 DONE 0.9s
+
+#2 [backend internal] load build definition from Dockerfile
+#2 DONE 1.1s
+
+#4 [backend internal] load metadata for docker.io/library/python:3.11-slim
+#4 ...
+
+#5 [frontend internal] load metadata for docker.io/library/node:18-alpine
+#5 DONE 5.6s
+
+#4 [backend internal] load metadata for docker.io/library/python:3.11-slim
+#4 DONE 5.8s
+
+#6 [backend internal] load .dockerignore
+#6 transferring context: 2B 0.0s done
+#6 DONE 1.4s
+
+#7 [frontend internal] load .dockerignore
+#7 transferring context: 2B 0.1s done
+#7 DONE 1.7s
+
+#8 [backend internal] load build context
+#8 DONE 0.0s
+
+#9 [frontend internal] load build context
+#9 transferring context: 630B 1.4s
+#9 ...
+
+#10 [backend 1/6] FROM docker.io/library/python:3.11-slim@sha256:233de06753d30d120b1a3ce359d8d3be8bda78524cd8f520c99883bfe33964cf
+#10 resolve docker.io/library/python:3.11-slim@sha256:233de06753d30d120b1a3ce359d8d3be8bda78524cd8f520c99883bfe33964cf 2.9s done
+#10 DONE 3.3s
+
+#8 [backend internal] load build context
+#8 ...
+
+#11 [frontend 1/5] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+#11 resolve docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e 3.2s done
+#11 DONE 3.8s
+
+#8 [backend internal] load build context
+#8 transferring context: 1.12kB 0.1s done
+#8 DONE 1.8s
+
+#9 [frontend internal] load build context
+#9 ...
+
+#12 [backend 5/6] COPY . .
+#12 CACHED
+
+#13 [backend 2/6] WORKDIR /app
+#13 CACHED
+
+#14 [backend 3/6] COPY requirements.txt .
+#14 CACHED
+
+#15 [backend 4/6] RUN pip install --upgrade pip && pip install -r requirements.txt
+#15 CACHED
+
+#16 [backend 6/6] RUN mkdir -p /app/media
+#16 CACHED
+
+#9 [frontend internal] load build context
+#9 transferring context: 38.57kB 7.2s
+#9 transferring context: 64.98kB 11.5s done
+#9 DONE 13.7s
+
+#17 [backend] exporting to image
+#17 exporting layers done
+#17 exporting manifest sha256:d866f84e00f1b2b653e8c7b58dd35a578b96525fb1e855fcc404a289f0acdf32 0.2s done
+#17 exporting config sha256:e67bd1771cb68da78e7e27b0fa4a9d3d68e925e69786ad2f72536b0764957c38 0.3s done
+#17 exporting attestation manifest sha256:4c0ed62acf1e5c2b677fc7e6a4b3e768b1434eb432b9c758f356597f05c73c87 2.7s done
+#17 exporting manifest list sha256:b497c507054b55987bc60a0f695961b279e3fce58e6f890b4b0a515deaa6fbd8 1.1s done
+#17 naming to docker.io/library/pilot1-backend:latest 0.2s done
+#17 unpacking to docker.io/library/pilot1-backend:latest
+#17 ...
+
+#18 [frontend 2/5] WORKDIR /usr/src/app
+#18 CACHED
+
+#19 [frontend 3/5] COPY package.json ./
+#19 CACHED
+
+#20 [frontend 4/5] RUN npm install --production=false
+#20 CACHED
+
+#21 [frontend 5/5] COPY . .
+#21 CACHED
+
+#22 [frontend] exporting to image
+#22 exporting layers 0.1s done
+#22 exporting manifest sha256:73fa0038fabf6dfc178c09bd6b92c751b9f7b58cb718af13c9e4659fa24298cc
+#22 ...
+
+#17 [backend] exporting to image
+#17 unpacking to docker.io/library/pilot1-backend:latest 1.0s done
+#17 DONE 8.3s
+
+#22 [frontend] exporting to image
+#22 exporting manifest sha256:73fa0038fabf6dfc178c09bd6b92c751b9f7b58cb718af13c9e4659fa24298cc 1.7s done
+#22 exporting config sha256:fef17daec60d1f61c5991e278cf53a0ec376e3cb10312e9d3ced708dd7bb93f5
+#22 exporting config sha256:fef17daec60d1f61c5991e278cf53a0ec376e3cb10312e9d3ced708dd7bb93f5 1.7s done
+#22 exporting attestation manifest sha256:75907830e0c903b12f140c5a3ec121d12a35bee1206479c4c8de9a6b2d5e1284
+#22 exporting attestation manifest sha256:75907830e0c903b12f140c5a3ec121d12a35bee1206479c4c8de9a6b2d5e1284 1.9s done
+#22 exporting manifest list sha256:9a82025b564686ccd1d49ebdac36714c69da57d18b19f992b597202b8b3be0ba
+#22 exporting manifest list sha256:9a82025b564686ccd1d49ebdac36714c69da57d18b19f992b597202b8b3be0ba 0.9s done
+#22 naming to docker.io/library/pilot1-frontend:latest
+#22 naming to docker.io/library/pilot1-frontend:latest 0.3s done
+#22 unpacking to docker.io/library/pilot1-frontend:latest
+#22 ...
+
+#23 [backend] resolving provenance for metadata file
+#23 DONE 0.8s
+
+#22 [frontend] exporting to image
+#22 unpacking to docker.io/library/pilot1-frontend:latest 20.7s done
+#22 DONE 28.5s
+
+#24 [frontend] resolving provenance for metadata file
+#24 DONE 0.1s
+[+] up 8/8
+ ✔ Image pilot1-frontend       Built                                                                              67.8s
+ ✔ Image pilot1-backend        Built                                                                              67.8s
+ ✔ Network pilot1_default      Created                                                                            0.7s
+ ✔ Volume pilot1_media_data    Created                                                                            0.2s
+ ✔ Volume pilot1_db_data       Created                                                                            0.1s
+ ✔ Container pilot1-db-1       Created                                                                            5.7s
+ ✔ Container pilot1-backend-1  Created                                                                            2.4s
+ ✔ Container pilot1-frontend-1 Created                                                                            2.2s
+Attaching to backend-1, db-1, frontend-1
+Container pilot1-db-1 Waiting
+db-1  | The files belonging to this database system will be owned by user "postgres".
+db-1  | This user must also own the server process.
+db-1  |
+db-1  | The database cluster will be initialized with locale "en_US.utf8".
+db-1  | The default database encoding has accordingly been set to "UTF8".
+db-1  | The default text search configuration will be set to "english".
+db-1  |
+db-1  | Data page checksums are disabled.
+db-1  |
+db-1  | fixing permissions on existing directory /var/lib/postgresql/data ... ok
+db-1  | creating subdirectories ... ok
+db-1  | selecting dynamic shared memory implementation ... posix
+db-1  | selecting default max_connections ... 100
+db-1  | selecting default shared_buffers ... 128MB
+db-1  | selecting default time zone ... Etc/UTC
+db-1  | creating configuration files ... ok
+db-1  | running bootstrap script ... ok
+db-1  | performing post-bootstrap initialization ... ok
+db-1  | syncing data to disk ... ok
+db-1  |
+db-1  | initdb: warning: enabling "trust" authentication for local connections
+db-1  | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+db-1  |
+db-1  | Success. You can now start the database server using:
+db-1  |
+db-1  |     pg_ctl -D /var/lib/postgresql/data -l logfile start
+db-1  |
+db-1  | waiting for server to start....2026-04-20 22:02:29.125 UTC [62] LOG:  starting PostgreSQL 15.17 (Debian 15.17-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+db-1  | 2026-04-20 22:02:29.204 UTC [62] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+db-1  | 2026-04-20 22:02:29.525 UTC [65] LOG:  database system was shut down at 2026-04-20 22:02:27 UTC
+db-1  | 2026-04-20 22:02:29.637 UTC [62] LOG:  database system is ready to accept connections
+db-1  |  done
+db-1  | server started
+db-1  | CREATE DATABASE
+db-1  |
+db-1  |
+db-1  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+db-1  |
+db-1  | waiting for server to shut down...2026-04-20 22:02:31.616 UTC [62] LOG:  received fast shutdown request
+db-1  | .2026-04-20 22:02:31.680 UTC [62] LOG:  aborting any active transactions
+db-1  | 2026-04-20 22:02:31.690 UTC [62] LOG:  background worker "logical replication launcher" (PID 68) exited with exit code 1
+db-1  | 2026-04-20 22:02:31.698 UTC [63] LOG:  shutting down
+db-1  | 2026-04-20 22:02:31.821 UTC [63] LOG:  checkpoint starting: shutdown immediate
+db-1  | .2026-04-20 22:02:32.927 UTC [63] LOG:  checkpoint complete: wrote 922 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.258 s, sync=0.385 s, total=1.229 s; sync files=301, longest=0.181 s, average=0.002 s; distance=4239 kB, estimate=4239 kB
+db-1  | 2026-04-20 22:02:32.952 UTC [62] LOG:  database system is shut down
+db-1  |  done
+db-1  | server stopped
+db-1  |
+db-1  | PostgreSQL init process complete; ready for start up.
+db-1  |
+db-1  | 2026-04-20 22:02:33.410 UTC [1] LOG:  starting PostgreSQL 15.17 (Debian 15.17-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+db-1  | 2026-04-20 22:02:33.446 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+db-1  | 2026-04-20 22:02:33.446 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+db-1  | 2026-04-20 22:02:33.652 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+db-1  | 2026-04-20 22:02:33.879 UTC [85] LOG:  database system was shut down at 2026-04-20 22:02:32 UTC
+db-1  | 2026-04-20 22:02:34.017 UTC [1] LOG:  database system is ready to accept connections
+Container pilot1-db-1 Healthy
+frontend-1  |
+frontend-1  | > msdc-frontend@0.1.0 start
+frontend-1  | > react-scripts start
+frontend-1  |
+frontend-1  | sh: react-scripts: not found
+frontend-1 exited with code 127
+backend-1   | System check identified some issues:
+backend-1   |
+backend-1   | WARNINGS:
+backend-1   | users.Role: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+backend-1   |   HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+backend-1   | users.User: (models.W042) Auto-created primary key used when not defining a primary key type, by default 'django.db.models.AutoField'.
+backend-1   |   HINT: Configure the DEFAULT_AUTO_FIELD setting or the AppConfig.default_auto_field attribute to point to a subclass of AutoField, e.g. 'django.db.models.BigAutoField'.
+backend-1   | Operations to perform:
+backend-1   |   Apply all migrations: admin, auth, contenttypes, sessions
+backend-1   | Running migrations:
+backend-1   |   Applying contenttypes.0001_initial... OK
+db-1        | 2026-04-20 22:03:20.103 UTC [130] ERROR:  relation "users_user" does not exist
+
+
+
+backend-1   | Traceback (most recent call last):
+db-1        | 2026-04-20 22:03:20.103 UTC [130] STATEMENT:  ALTER TABLE "django_admin_log" ADD CONSTRAINT "django_admin_log_user_id_c564eba6_fk_users_user_id" FOREIGN KEY ("user_id") REFERENCES "users_user" ("id") DEFERRABLE INITIALLY DEFERRED
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/utils.py", line 103, in _execute
+backend-1   |     return self.cursor.execute(sql)
+backend-1   |            ^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1   | psycopg2.errors.UndefinedTable: relation "users_user" does not exist
+backend-1   |
+backend-1   |
+backend-1   | The above exception was the direct cause of the following exception:
+backend-1   |
+backend-1   | Traceback (most recent call last):
+backend-1   |   File "/app/manage.py", line 16, in <module>
+backend-1   |     main()
+backend-1   |   File "/app/manage.py", line 13, in main
+backend-1   |     execute_from_command_line(sys.argv)
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/core/management/__init__.py", line 442, in execute_from_command_line
+backend-1   |     utility.execute()
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/core/management/__init__.py", line 436, in execute
+backend-1   |     self.fetch_command(subcommand).run_from_argv(self.argv)
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/core/management/base.py", line 420, in run_from_argv
+backend-1   |     self.execute(*args, **cmd_options)
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/core/management/base.py", line 464, in execute
+backend-1   |     output = self.handle(*args, **options)
+backend-1   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/core/management/base.py", line 111, in wrapper
+backend-1   |     res = handle_func(*args, **kwargs)
+backend-1   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/core/management/commands/migrate.py", line 353, in handle
+backend-1   |     post_migrate_state = executor.migrate(
+backend-1   |                          ^^^^^^^^^^^^^^^^^
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/migrations/executor.py", line 135, in migrate
+backend-1   |     state = self._migrate_all_forwards(
+backend-1   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/migrations/executor.py", line 167, in _migrate_all_forwards
+backend-1   |     state = self.apply_migration(
+backend-1   |             ^^^^^^^^^^^^^^^^^^^^^
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/migrations/executor.py", line 252, in apply_migration
+backend-1   |     with self.connection.schema_editor(
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/base/schema.py", line 169, in __exit__
+backend-1   |     self.execute(sql, None)
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/postgresql/schema.py", line 45, in execute
+backend-1   |     return super().execute(sql, params)
+backend-1   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/base/schema.py", line 204, in execute
+backend-1   |     cursor.execute(sql, params)
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/utils.py", line 122, in execute
+backend-1   |     return super().execute(sql, params)
+backend-1   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/utils.py", line 79, in execute
+backend-1   |     return self._execute_with_wrappers(
+backend-1   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+backend-1   |     return executor(sql, params, many, context)
+backend-1   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/utils.py", line 100, in _execute
+backend-1   |     with self.db.wrap_database_errors:
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+backend-1   |     raise dj_exc_value.with_traceback(traceback) from exc_value
+backend-1   |   File "/usr/local/lib/python3.11/site-packages/django/db/backends/utils.py", line 103, in _execute
+backend-1   |     return self.cursor.execute(sql)
+backend-1   |            ^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1   | django.db.utils.ProgrammingError: relation "users_user" does not exist
+backend-1   |
+backend-1   |   Applying admin.0001_initial...
+backend-1 exited with code 1

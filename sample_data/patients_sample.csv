@@ -1,0 +1,5 @@
+=== FILE: sample_data/patients_sample.csv ===
+first_name,last_name,national_id,file_number,barcode,date_of_birth,phone,email,nationality,address,medical_history,allergies
+Ali,Ahmed,1234567890,F001,B001,1980-01-01,0912345678,ali@example.com,Libyan,"Misrata","Type 2 Diabetes","None"
+Fatima,Saleh,0987654321,F002,B002,1975-05-12,0923456789,fatima@example.com,Libyan,"Zliten","Hypothyroidism","Penicillin"
+Hassan,Khalifa,1122334455,F003,B003,1990-07-20,0934567890,hassan@example.com,Libyan,"Bani Walid","Gestational Diabetes","None"

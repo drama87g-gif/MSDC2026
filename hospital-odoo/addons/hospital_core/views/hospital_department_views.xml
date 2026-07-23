@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="hospital_department_view_tree" model="ir.ui.view">
+            <field name="name">hospital.department.view.tree</field>
+            <field name="model">hospital.department</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="code"/>
+                    <field name="name"/>
+                    <field name="head_doctor_id"/>
+                    <field name="capacity"/>
+                    <field name="location"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="hospital_department_view_form" model="ir.ui.view">
+            <field name="name">hospital.department.view.form</field>
+            <field name="model">hospital.department</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="code"/>
+                                <field name="name"/>
+                                <field name="head_doctor_id" domain="[('department_id', '=', id)]"/>
+                            </group>
+                            <group>
+                                <field name="capacity"/>
+                                <field name="location"/>
+                                <field name="phone"/>
+                                <field name="active"/>
+                            </group>
+                        </group>
+                        <field name="description" widget="html"/>
+                        <field name="doctor_ids" mode="tree">
+                            <tree>
+                                <field name="name"/>
+                                <field name="specialization"/>
+                                <field name="consultation_fee"/>
+                                <field name="state"/>
+                            </tree>
+                        </field>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="hospital_department_view_search" model="ir.ui.view">
+            <field name="name">hospital.department.view.search</field>
+            <field name="model">hospital.department</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="code"/>
+                    <filter name="active_dept" string="Active" domain="[('active', '=', True)]"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="hospital_department_action" model="ir.actions.act_window">
+            <field name="name">Departments</field>
+            <field name="res_model">hospital.department</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+    </data>
+</odoo>

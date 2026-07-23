@@ -1,0 +1,16 @@
+{
+  "admissions": "مكتب الدخول",
+  "add_patient": "إضافة مريض",
+  "first_name": "الاسم الأول",
+  "last_name": "اسم العائلة",
+  "national_id": "الرقم الوطني",
+  "file_number": "رقم الملف",
+  "barcode": "الباركود",
+  "phone": "الهاتف",
+  "email": "البريد الإلكتروني",
+  "import_excel": "استيراد إكسل",
+  "upload": "رفع",
+  "language": "اللغة",
+  "print_card": "طباعة البطاقة",
+  "patient_list": "قائمة المرضى"
+}

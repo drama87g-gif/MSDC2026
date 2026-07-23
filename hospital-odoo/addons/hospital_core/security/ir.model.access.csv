@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+patient_user,Patient User Access,model_hospital_patient,base.group_user,1,1,1,1
+patient_system,Patient System Access,model_hospital_patient,base.group_system,1,1,1,1
+doctor_user,Doctor User Access,model_hospital_doctor,base.group_user,1,1,1,1
+doctor_system,Doctor System Access,model_hospital_doctor,base.group_system,1,1,1,1
+department_user,Department User Access,model_hospital_department,base.group_user,1,1,1,1
+department_system,Department System Access,model_hospital_department,base.group_system,1,1,1,1

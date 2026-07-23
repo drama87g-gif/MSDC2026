@@ -1,0 +1,106 @@
+C:\PILOT.1>docker compose config
+name: pilot1
+services:
+  backend:
+    build:
+      context: C:\PILOT.1\backend
+      dockerfile: Dockerfile
+    command:
+      - bash
+      - -c
+      - python manage.py migrate --noinput && gunicorn msdc_backend.wsgi:application --bind 0.0.0.0:8000
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+    environment:
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      DATABASE_URL: postgres://msdc_user:msdc_pass@db:5432/msdc
+      DJANGO_DEBUG: "True"
+      DJANGO_SECRET_KEY: "1234"
+      POSTGRES_DB: msdc
+      POSTGRES_HOST: db
+      POSTGRES_PASSWORD: msdc_pass
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: msdc_user
+      REACT_APP_API_BASE: http://localhost:3000/api
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 8000
+        published: "8000"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: C:\PILOT.1\backend
+        target: /app
+        bind: {}
+      - type: volume
+        source: media_data
+        target: /app/media
+        volume: {}
+  db:
+    environment:
+      POSTGRES_DB: msdc
+      POSTGRES_PASSWORD: msdc_pass
+      POSTGRES_USER: msdc_user
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U msdc_user -d msdc
+      timeout: 5s
+      interval: 5s
+      retries: 10
+    image: postgres:15
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "5432"
+        protocol: tcp
+    volumes:
+      - type: volume
+        source: db_data
+        target: /var/lib/postgresql/data
+        volume: {}
+  frontend:
+    build:
+      context: C:\PILOT.1\frontend
+      dockerfile: Dockerfile
+    depends_on:
+      backend:
+        condition: service_started
+        required: true
+    environment:
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      DATABASE_URL: postgres://msdc_user:msdc_pass@db:5432/msdc
+      DJANGO_DEBUG: "True"
+      DJANGO_SECRET_KEY: "1234"
+      POSTGRES_DB: msdc
+      POSTGRES_HOST: db
+      POSTGRES_PASSWORD: msdc_pass
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: msdc_user
+      REACT_APP_API_BASE: http://localhost:3000/api
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3000"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: C:\PILOT.1\frontend
+        target: /usr/src/app
+        bind: {}
+networks:
+  default:
+    name: pilot1_default
+volumes:
+  db_data:
+    name: pilot1_db_data
+  media_data:
+    name: pilot1_media_data

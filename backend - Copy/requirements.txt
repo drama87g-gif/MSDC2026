@@ -1,0 +1,9 @@
+Django>=4.2
+djangorestframework
+psycopg2-binary
+Pillow
+openpyxl
+reportlab
+django-cors-headers
+python-dotenv
+djangorestframework-simplejwt

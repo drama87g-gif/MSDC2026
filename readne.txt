@@ -1,0 +1,72 @@
+
+
+
+copy .env.example .venv
+
+docker compose up --build
+
+
+
+
+
+
+
+MSDC Phase 1 - Admissions Package
+
+
+
+=================================
+Project: MSDC - Misrata Specialized Center for Diabetes and Endocrine
+Phase 1 Scope: Admissions module, patient CRUD, photo upload, barcode, Excel import/export, patient card PDF, authentication, RBAC skeleton, EN/AR i18n, Docker Compose.
+
+Quick Overview
+--------------
+- Backend: Django + Django REST Framework
+- Frontend: React + react-i18next
+- Database: PostgreSQL
+- PDF: ReportLab
+- Excel: openpyxl
+- Containerization: Docker Compose
+
+Default credentials and seeds
+-----------------------------
+- Admin user (seeded): username: admin  password: AdminPass123
+- Default roles seeded: Admin, Admission, Reception, Clinic, Pharmacy, Lab, Inventory
+
+How to run locally
+--------
+----------
+1. Copy .env.example to .env and edit DB credentials if needed.
+2. Build and run containers:
+   docker compose up --build
+3. Run migrations and seed roles/admin:
+   docker compose exec backend python manage.py migrate
+   docker compose exec backend python manage.py seed_roles
+   docker compose exec backend python manage.py createsuperuser --username admin --email admin@example.com
+   (When prompted, use password AdminPass123 or change as desired)
+4. Open frontend at http://localhost:3000 and backend API at http://localhost:8000/api/
+
+Notes on printers and barcode scanners
+-------------------------------------
+- Barcode scanners usually act as keyboard input. Focus the search input in the admissions UI and scan.
+- For direct card printers, use the optional local print agent described in scripts/print_agent_readme.txt.
+- Browser printing is supported for A4/A5 receipts and patient card preview. For direct printer driver access, install the local print agent on the workstation connected to the printer.
+
+Phase 1 Deliverables
+--------------------
+- Backend Django project with admissions app
+- Frontend React admissions UI with EN/AR translations and RTL support
+- Docker Compose for db, backend, frontend
+- Sample Excel file sample_data/patients_sample.csv
+- Print agent instructions and translations guide
+- Tests for patient endpoints
+
+Extending the project
+---------------------
+- Add Clinic, Pharmacy, Lab, Inventory apps following the admissions app pattern.
+- Add more granular permissions and audit log retention policies.
+- Replace placeholder PDF generator with a full template for card printers.
+
+Contact and support
+-------------------
+If you need deployment assistance on your shared server, provide SSH access details and server OS and I will provide deployment steps tailored to your environment.

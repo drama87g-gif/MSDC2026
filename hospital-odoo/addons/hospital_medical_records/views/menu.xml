@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <menuitem id="hospital_medical_records_menu" name="Medical Records" parent="hospital_core.hospital_root_menu" sequence="3"/>
+        <menuitem id="hospital_medical_record_list_menu" action="hospital_medical_records.hospital_medical_record_action" parent="hospital_medical_records_menu" sequence="1"/>
+    </data>
+</odoo>

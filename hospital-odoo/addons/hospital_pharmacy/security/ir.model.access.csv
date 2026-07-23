@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+medicine_user,Medicine User Access,model_hospital_medicine,base.group_user,1,1,1,1
+medicine_system,Medicine System Access,model_hospital_medicine,base.group_system,1,1,1,1
+medicine_batch_user,Medicine Batch User Access,model_hospital_medicine_batch,base.group_user,1,1,1,1
+medicine_batch_system,Medicine Batch System Access,model_hospital_medicine_batch,base.group_system,1,1,1,1
+dispensing_user,Dispensing User Access,model_hospital_medicine_dispensing,base.group_user,1,1,1,1
+dispensing_system,Dispensing System Access,model_hospital_medicine_dispensing,base.group_system,1,1,1,1

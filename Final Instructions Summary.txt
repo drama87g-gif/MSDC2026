@@ -1,0 +1,21 @@
+Final Instructions Summary
+
+How to reconstruct from this TXT
+
+Create project root folder msdc_phase1.
+
+Create files and folders exactly as labeled in each === FILE: path === block above.
+
+Place Docker Compose and .env.example at root.
+
+Build and run with docker compose up --build.
+
+Run migrations and seed roles as described in README.txt.
+
+Access frontend at http://localhost:3000 and backend at http://localhost:8000/api/.
+
+What I includedComplete minimal but runnable backend and frontend skeletons.
+
+Admissions app with Patient model, import endpoint, and PDF card generator.i18n support for English and Arabic with RTL switching. 
+Docker Compose and environment example.Sample data and tests.
+

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="hospital_medical_record_view_tree" model="ir.ui.view">
+            <field name="name">hospital.medical.record.view.tree</field>
+            <field name="model">hospital.medical.record</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="patient_id"/>
+                    <field name="doctor_id"/>
+                    <field name="record_date"/>
+                    <field name="diagnosis"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="hospital_medical_record_view_form" model="ir.ui.view">
+            <field name="name">hospital.medical.record.view.form</field>
+            <field name="model">hospital.medical.record</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="True"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="patient_id" readonly="True"/>
+                                <field name="appointment_id"/>
+                                <field name="record_date"/>
+                            </group>
+                            <group>
+                                <field name="doctor_id"/>
+                                <field name="confidential"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Clinical Information">
+                                <field name="chief_complaint" widget="html"/>
+                                <field name="history_of_present_illness" widget="html"/>
+                                <field name="physical_examination" widget="html"/>
+                                <field name="diagnosis" widget="html"/>
+                            </page>
+                            <page string="Vital Signs">
+                                <field name="vital_signs_ids">
+                                    <tree editable="bottom">
+                                        <field name="measured_date"/>
+                                        <field name="temperature"/>
+                                        <field name="heart_rate"/>
+                                        <field name="blood_pressure"/>
+                                        <field name="respiratory_rate"/>
+                                        <field name="oxygen_saturation"/>
+                                        <field name="weight"/>
+                                        <field name="height"/>
+                                        <field name="bmi"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Treatment and Prescriptions">
+                                <field name="treatment_plan" widget="html"/>
+                                <field name="prescription_ids">
+                                    <tree editable="bottom">
+                                        <field name="medicine_name"/>
+                                        <field name="dosage"/>
+                                        <field name="frequency"/>
+                                        <field name="duration"/>
+                                        <field name="quantity"/>
+                                        <field name="start_date"/>
+                                        <field name="end_date"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Test and Imaging Results">
+                                <field name="test_results" widget="html"/>
+                                <field name="imaging_results" widget="html"/>
+                            </page>
+                            <page string="Follow-up">
+                                <field name="follow_up_date"/>
+                                <field name="follow_up_notes" widget="html"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="hospital_medical_record_view_search" model="ir.ui.view">
+            <field name="name">hospital.medical.record.view.search</field>
+            <field name="model">hospital.medical.record</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="patient_id"/>
+                    <field name="doctor_id"/>
+                    <field name="diagnosis"/>
+                    <filter name="confidential" string="Confidential" domain="[('confidential', '=', True)]"/>
+                    <separator/>
+                    <group expand="1" string="Group By">
+                        <filter name="group_by_patient" string="Patient" context="{'group_by': 'patient_id'}"/>
+                        <filter name="group_by_doctor" string="Doctor" context="{'group_by': 'doctor_id'}"/>
+                        <filter name="group_by_date" string="Record Date" context="{'group_by': 'record_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="hospital_medical_record_action" model="ir.actions.act_window">
+            <field name="name">Medical Records</field>
+            <field name="res_model">hospital.medical.record</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+    </data>
+</odoo>

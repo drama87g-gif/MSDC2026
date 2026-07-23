@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+medical_record_user,Medical Record User Access,model_hospital_medical_record,base.group_user,1,1,1,1
+medical_record_system,Medical Record System Access,model_hospital_medical_record,base.group_system,1,1,1,1
+vital_signs_user,Vital Signs User Access,model_hospital_vital_signs,base.group_user,1,1,1,1
+vital_signs_system,Vital Signs System Access,model_hospital_vital_signs,base.group_system,1,1,1,1
+prescription_user,Prescription User Access,model_hospital_prescription,base.group_user,1,1,1,1
+prescription_system,Prescription System Access,model_hospital_prescription,base.group_system,1,1,1,1

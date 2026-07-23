@@ -1,0 +1,29 @@
+# backend/Dockerfile
+FROM python:3.11-slim
+
+# system deps for common packages and psycopg2
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    netcat \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# copy requirements first for caching
+COPY requirements.txt .
+
+# install python deps
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+# copy application code
+COPY . .
+
+# make wait script executable (if present)
+RUN chmod +x /app/wait-for-db.sh || true
+
+EXPOSE 8000
+
+# default command runs the wait script which runs migrations then starts gunicorn
+CMD ["sh", "/app/wait-for-db.sh"]

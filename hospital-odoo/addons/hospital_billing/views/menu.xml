@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <menuitem id="hospital_billing_menu" name="Billing" parent="hospital_core.hospital_root_menu" sequence="4"/>
+        <menuitem id="hospital_invoice_menu" action="hospital_billing.hospital_invoice_action" parent="hospital_billing_menu" sequence="1"/>
+    </data>
+</odoo>

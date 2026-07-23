@@ -1,0 +1,16 @@
+{
+  "admissions": "Admissions",
+  "add_patient": "Add Patient",
+  "first_name": "First Name",
+  "last_name": "Last Name",
+  "national_id": "National ID",
+  "file_number": "File Number",
+  "barcode": "Barcode",
+  "phone": "Phone",
+  "email": "Email",
+  "import_excel": "Import Excel",
+  "upload": "Upload",
+  "language": "Language",
+  "print_card": "Print Card",
+  "patient_list": "Patient List"
+}
