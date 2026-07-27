@@ -11,9 +11,10 @@ from sqlalchemy.orm import joinedload
 # Configuration
 app = Flask(__name__)
 
-# Read database URL from env (default to sqlite for dev)
-DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:////app/msdc.db')
+# Read database URL from env
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://msdc_user:msdc_pass@db:5432/msdc')
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max photo
@@ -399,11 +400,19 @@ def appointments():
     return jsonify(paginate_query(query, schema_func=lambda a: a.to_dict()))
 
 
+# Error handlers
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Not found'}), 404
+
+
+@app.errorhandler(500)
+def server_error(error):
+    return jsonify({'error': 'Internal server error'}), 500
+
+
 # Serve app
 if __name__ == '__main__':
-    # If INIT_DB environment var is set to "1", create tables at startup (dev only)
-    if os.environ.get('INIT_DB') == '1':
-        with app.app_context():
-            db.create_all()
-    # Use gunicorn in production via Docker CMD; here fallback to Flask dev server for local dev
+    with app.app_context():
+        db.create_all()
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=os.environ.get('FLASK_DEBUG', '0') == '1')

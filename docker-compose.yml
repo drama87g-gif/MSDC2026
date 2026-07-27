@@ -1,6 +1,9 @@
+version: '3.8'
+
 services:
   db:
-    image: postgres:15
+    image: postgres:15-alpine
+    container_name: msdc-db
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -14,6 +17,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - msdc
 
   backend:
     build:
@@ -21,12 +26,21 @@ services:
       dockerfile: Dockerfile
     container_name: msdc-backend
     environment:
-      DATABASE_URL: sqlite:///msdc.db
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       FLASK_ENV: production
+      PYTHONUNBUFFERED: 1
+      INIT_DB: "1"
     ports:
       - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
     networks:
       - msdc
+    command: >
+      sh -c "python /app/app.py"
 
   frontend:
     build:
@@ -39,6 +53,9 @@ services:
       - backend
     networks:
       - msdc
+
+volumes:
+  db_data:
 
 networks:
   msdc:

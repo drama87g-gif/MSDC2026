@@ -3,6 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1
+ENV FLASK_APP=app.py
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
@@ -16,5 +17,8 @@ COPY . .
 
 EXPOSE 5000
 
-# Use gunicorn for production; environment should set WORKERS
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "app:app"]
+# Create uploads directory
+RUN mkdir -p /app/uploads
+
+# Run Flask app with development server (gunicorn can be used in production)
+CMD ["flask", "run", "--host", "0.0.0.0"]
