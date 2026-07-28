@@ -1,0 +1,38 @@
+# Requirements for Desktop Applications
+
+# GUI Framework
+PyQt5==5.15.9
+PyQt5-sip==12.13.0
+
+# HTTP Client
+requests==2.31.0
+
+# Image Processing
+Pillow==10.0.0
+
+# PDF & Printing
+reportlab==4.0.7
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Barcode Generation
+python-barcode==0.16.0
+
+# Date/Time Handling
+python-dateutil==2.8.2
+
+# Database (for caching)
+peewee==3.17.0
+
+# Logging
+loguru==0.7.2
+
+# For Building EXE
+PyInstaller==6.1.0
+
+# JSON Handling
+jsonschema==4.19.0
+
+# Security
+cryptography==41.0.3
