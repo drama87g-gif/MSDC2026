@@ -10,6 +10,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./db_init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     healthcheck:
@@ -28,8 +29,10 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       FLASK_ENV: production
+      FLASK_DEBUG: 0
       PYTHONUNBUFFERED: 1
       INIT_DB: "1"
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
     ports:
       - "5000:5000"
     depends_on:
@@ -37,10 +40,10 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+      - backend_uploads:/app/uploads
     networks:
       - msdc
-    command: >
-      sh -c "python /app/app.py"
+    command: python /app/app.py
 
   frontend:
     build:
@@ -56,6 +59,7 @@ services:
 
 volumes:
   db_data:
+  backend_uploads:
 
 networks:
   msdc:
