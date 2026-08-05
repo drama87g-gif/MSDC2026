@@ -1,0 +1,58 @@
+name: Build .NET native Windows executables
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-exes:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: admin
+            project: Apps/Admin/Admin.csproj
+            artifact: Admin
+          - id: pharmacy
+            project: Apps/Pharmacy/Pharmacy.csproj
+            artifact: Pharmacy
+          - id: admission
+            project: Apps/Admission/Admission.csproj
+            artifact: Admission
+          - id: reception
+            project: Apps/Reception/Reception.csproj
+            artifact: Reception
+          - id: lab
+            project: Apps/Lab/Lab.csproj
+            artifact: Lab
+          - id: statistics
+            project: Apps/Statistics/Statistics.csproj
+            artifact: Statistics
+          - id: medical_inventory
+            project: Apps/MedicalInventory/MedicalInventory.csproj
+            artifact: MedicalInventory
+          - id: clinic
+            project: Apps/Clinic/Clinic.csproj
+            artifact: Clinic
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build and publish
+        run: |
+          echo "Publishing ${{ matrix.project }}"
+          dotnet publish "${{ matrix.project }}" -c Release -r win-x64 /p:PublishSingleFile=true /p:SelfContained=true /p:PublishTrimmed=false -o "publish/${{ matrix.id }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}-exe
+          path: publish/${{ matrix.id }}/
